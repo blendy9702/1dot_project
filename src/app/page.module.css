@@ -67,10 +67,7 @@
   height: 48px;
   padding: 0 20px;
   border: 1px solid transparent;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -105,6 +102,33 @@ a.secondary {
 
 .footer img {
   flex-shrink: 0;
+}
+
+/* Center content area below the sticky header (64px) */
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* justify-content: center; */
+  min-height: calc(100svh - 64px);
+  text-align: center;
+  gap: 16px;
+}
+
+.centerBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.centerBox > div {
+  display: flex;
+  gap: 16px;
 }
 
 /* Enable hover only on non-touch devices */
