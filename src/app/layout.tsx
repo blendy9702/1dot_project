@@ -23,7 +23,7 @@ export default function RootLayout({
       </head>
       <body>
         <Header />
-        <div className="app-container-1280">{children}</div>
+        <div>{children}</div>
       </body>
     </html>
   );

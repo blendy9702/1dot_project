@@ -115,15 +115,21 @@ a.secondary {
   gap: 16px;
 }
 
+.hTextCenter {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
 .centerBox {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: #bfcaeb;
   gap: 16px;
   width: 100%;
-  margin-top: 30px;
-  margin-bottom: 30px;
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 .centerBox > div {
