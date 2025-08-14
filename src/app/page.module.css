@@ -195,3 +195,70 @@ a.secondary {
     filter: invert();
   }
 }
+
+/* 드롭다운 메뉴 항목 호버 강제적용 */
+.menuItem {
+  transition: background-color 0.15s ease;
+}
+
+.menuItem:hover {
+  background-color: #f1f3f5 !important;
+}
+
+/* shadcn/ui 페이지네이션 스타일 */
+.pgNav {
+  display: flex;
+  justify-content: center;
+}
+
+.pgList {
+  display: inline-flex;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.pgItem {
+  list-style: none;
+}
+
+.pgLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: white;
+  color: #111;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.pgLink:hover:not(:disabled) {
+  background: #f8f9fa;
+}
+
+.pgLink:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pgLinkActive {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+.pgLink.pgLinkActive:hover,
+.pgLink:disabled {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.pgEllipsis {
+  cursor: default;
+}

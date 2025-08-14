@@ -1,8 +1,12 @@
 "use client";
 
 import styles from "./page.module.css";
-import { useMemo, useState } from "react";
-import { type Row, generateDummyRows } from "./data";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type Row, generateDummyRows } from "./data/data";
+import { ViewDetails } from "./components/ViewDetails";
+import { EditForm } from "./components/EditForm";
+import { ChartView } from "./components/ChartView";
+import { Pagination } from "./components/Pagination";
 
 export default function Home() {
   const [sectionFilter, setSectionFilter] = useState<string>("전체");
@@ -17,6 +21,23 @@ export default function Home() {
     null
   );
   const [editRow, setEditRow] = useState<Row | null>(null);
+  const [openMenuPid, setOpenMenuPid] = useState<string | null>(null);
+  const [pageSize, setPageSize] = useState<number | "all">("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleDocumentMouseDown = (e: MouseEvent) => {
+      if (!openMenuPid) return;
+      const target = e.target as Node | null;
+      if (menuRef.current && target && !menuRef.current.contains(target)) {
+        setOpenMenuPid(null);
+      }
+    };
+    document.addEventListener("mousedown", handleDocumentMouseDown);
+    return () =>
+      document.removeEventListener("mousedown", handleDocumentMouseDown);
+  }, [openMenuPid]);
 
   const filtered = useMemo(() => {
     return rows
@@ -88,6 +109,20 @@ export default function Home() {
     return labels;
   }, []);
 
+  const totalPages = useMemo(() => {
+    if (pageSize === "all") return 1;
+    return Math.max(1, Math.ceil(filtered.length / pageSize));
+  }, [filtered.length, pageSize]);
+
+  const visibleRows = useMemo(() => {
+    if (pageSize === "all") return filtered;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filtered.slice(startIndex, endIndex);
+  }, [filtered, pageSize, currentPage]);
+
+  // 페이지 버튼 렌더링은 `Pagination` 컴포넌트에서 처리
+
   return (
     <div className={styles.center}>
       <div className={styles.centerBox}>
@@ -142,8 +177,38 @@ export default function Home() {
         <div className="mt-3">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="m-0">데이터 리스트</h5>
-            <small className="text-muted">총 {filtered.length}건</small>
+            <div className="d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-2">
+                <label className="form-label small text-nowrap m-0">
+                  페이지 수
+                </label>
+                <select
+                  className="form-select form-select-sm"
+                  value={pageSize === "all" ? "all" : String(pageSize)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPageSize(val === "all" ? "all" : Number(val));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="all">전체</option>
+                  <option value="5">5개</option>
+                  <option value="10">10개</option>
+                  <option value="15">15개</option>
+                </select>
+              </div>
+            </div>
+            <div className="text-muted">총 {filtered.length}건</div>
           </div>
+          {pageSize !== "all" && totalPages > 1 && (
+            <div className="my-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
           <div className="table-responsive">
             <table className="table table-sm table-hover align-middle">
               <thead className="table-light">
@@ -152,8 +217,25 @@ export default function Home() {
                   <th style={{ width: 200 }}>키워드</th>
                   <th style={{ width: 300 }}>플레이스</th>
                   <th style={{ width: 140 }}>PID</th>
-                  <th>미니 차트</th>
-                  <th style={{ width: 220 }}>작업</th>
+                  <th>
+                    <div className="d-flex justify-content-center align-items-center gap-3">
+                      {dateLabels.map((d, i) => (
+                        <small
+                          key={i}
+                          style={{
+                            fontSize: 16,
+                            lineHeight: "20px",
+                            width: 50,
+                            textAlign: "center",
+                            paddingBottom: "2px",
+                          }}
+                        >
+                          {d}
+                        </small>
+                      ))}
+                    </div>
+                  </th>
+                  <th style={{ width: 180 }}>작업</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,69 +246,84 @@ export default function Home() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((row) => (
+                  visibleRows.map((row) => (
                     <tr key={row.pid}>
                       <td>{row.section}</td>
                       <td>{row.keyword}</td>
                       <td>{row.place}</td>
                       <td>{row.pid}</td>
                       <td>
-                        <div
-                          className="d-flex justify-content-center align-items-end gap-3"
-                          style={{ height: 60 }}
-                        >
+                        <div className="d-flex justify-content-center align-items-center gap-3">
                           {row.stats7d.map((v, i) => (
                             <div
                               key={i}
-                              className="d-flex flex-column align-items-center gap-1"
-                              style={{ width: 22 }}
+                              className="d-flex flex-column align-items-center"
+                              style={{ width: 50 }}
                             >
                               <small
                                 className="text-muted"
-                                style={{ fontSize: 12, lineHeight: "12px" }}
+                                style={{ fontSize: 16, lineHeight: "16px" }}
                               >
                                 {v}
-                              </small>
-                              <div
-                                className="bg-primary"
-                                style={{
-                                  width: 12,
-                                  height: Math.max(
-                                    4,
-                                    Math.round((v / 60) * 36)
-                                  ),
-                                }}
-                              ></div>
-                              <small
-                                className="text-muted"
-                                style={{ fontSize: 12, lineHeight: "12px" }}
-                              >
-                                {dateLabels[i]}
                               </small>
                             </div>
                           ))}
                         </div>
                       </td>
                       <td>
-                        <div className="btn-group btn-group-sm" role="group">
+                        <div
+                          className="position-relative"
+                          ref={openMenuPid === row.pid ? menuRef : null}
+                        >
                           <button
-                            className="btn btn-outline-primary"
-                            onClick={() => openEdit(row)}
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() =>
+                              setOpenMenuPid((prev) =>
+                                prev === row.pid ? null : row.pid
+                              )
+                            }
                           >
-                            수정
+                            메뉴
                           </button>
-                          <button
-                            className="btn btn-outline-secondary"
-                            onClick={() => openView(row)}
-                          >
-                            조회
-                          </button>
-                          <button
-                            className="btn btn-outline-success"
-                            onClick={() => openChart(row)}
-                          >
-                            차트
-                          </button>
+                          {openMenuPid === row.pid && (
+                            <div
+                              className="position-absolute mt-1 bg-white border rounded shadow-sm"
+                              style={{
+                                minWidth: 110,
+                                zIndex: 10,
+                                left: "50%",
+                                transform: "translateX(-50%)",
+                              }}
+                            >
+                              <button
+                                className={`dropdown-item w-100 p-2 ${styles.menuItem}`}
+                                onClick={() => {
+                                  openEdit(row);
+                                  setOpenMenuPid(null);
+                                }}
+                              >
+                                수정
+                              </button>
+                              <button
+                                className={`dropdown-item w-100 p-2 ${styles.menuItem}`}
+                                onClick={() => {
+                                  openView(row);
+                                  setOpenMenuPid(null);
+                                }}
+                              >
+                                조회
+                              </button>
+                              <button
+                                className={`dropdown-item w-100 p-2 ${styles.menuItem}`}
+                                onClick={() => {
+                                  openChart(row);
+                                  setOpenMenuPid(null);
+                                }}
+                              >
+                                차트
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -262,121 +359,16 @@ export default function Home() {
               </div>
               <div className="p-3">
                 {modalType === "view" && activeRow && (
-                  <div className="table-responsive">
-                    <table className="table table-sm">
-                      <tbody>
-                        <tr>
-                          <th>구분</th>
-                          <td>{activeRow.section}</td>
-                        </tr>
-                        <tr>
-                          <th>키워드</th>
-                          <td>{activeRow.keyword}</td>
-                        </tr>
-                        <tr>
-                          <th>플레이스</th>
-                          <td>{activeRow.place}</td>
-                        </tr>
-                        <tr>
-                          <th>PID</th>
-                          <td>{activeRow.pid}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  <ViewDetails row={activeRow} />
                 )}
                 {modalType === "edit" && editRow && (
-                  <div className="row g-3">
-                    <div className="col-12 col-md-4">
-                      <label className="form-label">구분</label>
-                      <select
-                        className="form-select"
-                        value={editRow.section}
-                        onChange={(e) =>
-                          setEditRow({
-                            ...(editRow as Row),
-                            section: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="월보장">월보장</option>
-                        <option value="미분류">미분류</option>
-                        <option value="슬롯">슬롯</option>
-                      </select>
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <label className="form-label">PID</label>
-                      <input
-                        className="form-control"
-                        value={editRow.pid}
-                        onChange={(e) =>
-                          setEditRow({
-                            ...(editRow as Row),
-                            pid: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">키워드</label>
-                      <input
-                        className="form-control"
-                        value={editRow.keyword}
-                        onChange={(e) =>
-                          setEditRow({
-                            ...(editRow as Row),
-                            keyword: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">플레이스</label>
-                      <input
-                        className="form-control"
-                        value={editRow.place}
-                        onChange={(e) =>
-                          setEditRow({
-                            ...(editRow as Row),
-                            place: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
+                  <EditForm
+                    editRow={editRow as Row}
+                    onChange={(row) => setEditRow(row)}
+                  />
                 )}
                 {modalType === "chart" && (
-                  <div>
-                    <div className="mb-2">
-                      <small className="text-muted">최근 7일 지표 (데모)</small>
-                    </div>
-                    <div
-                      className="d-flex align-items-end gap-2"
-                      style={{ height: 160 }}
-                    >
-                      {chartDataFor(activeRow).map((v, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-primary"
-                          style={{ width: 24, height: v }}
-                          title={`${v}`}
-                        ></div>
-                      ))}
-                    </div>
-                    {activeRow && (
-                      <div className="mt-2 text-muted small">
-                        합계:{" "}
-                        {activeRow.stats7d
-                          .reduce((a, b) => a + b, 0)
-                          .toLocaleString()}{" "}
-                        / 평균:{" "}
-                        {Math.round(
-                          activeRow.stats7d.reduce((a, b) => a + b, 0) /
-                            activeRow.stats7d.length
-                        ).toLocaleString()}
-                      </div>
-                    )}
-                  </div>
+                  <ChartView data={chartDataFor(activeRow)} row={activeRow} />
                 )}
               </div>
               {modalType === "edit" && (
