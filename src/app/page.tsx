@@ -64,10 +64,10 @@ export default function Home() {
       .sort((a, b) => (a.pid < b.pid ? -1 : 1));
   }, [rows, sectionFilter, keywordFilter, placeFilter, pidFilter]);
 
-  const openView = (row: Row) => {
-    setActiveRow(row);
-    setModalType("view");
-  };
+  // const openView = (row: Row) => {
+  //   setActiveRow(row);
+  //   setModalType("view");
+  // };
 
   const openEdit = (row: Row) => {
     setEditRow({ ...row });
@@ -306,10 +306,10 @@ export default function Home() {
                               </button>
                               <button
                                 className={`dropdown-item w-100 p-2 ${styles.menuItem}`}
-                                onClick={() => {
-                                  openView(row);
-                                  setOpenMenuPid(null);
-                                }}
+                                // onClick={() => {
+                                //   openView(row);
+                                //   setOpenMenuPid(null);
+                                // }}
                               >
                                 조회
                               </button>
@@ -346,16 +346,18 @@ export default function Home() {
             >
               <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
                 <h6 className="m-0">
-                  {modalType === "edit" && "항목 수정"}
-                  {modalType === "view" && "상세 조회"}
-                  {modalType === "chart" && "차트 보기"}
+                  {modalType === "edit" && "플레이스 수정"}
+                  {modalType === "view" && "무슨 조회지?"}
+                  {modalType === "chart" && "플레이스 랭크 차트"}
                 </h6>
-                <button
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={closeModal}
-                >
-                  닫기
-                </button>
+                {modalType === "chart" && (
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={closeModal}
+                  >
+                    닫기
+                  </button>
+                )}
               </div>
               <div className="p-3">
                 {modalType === "view" && activeRow && (
