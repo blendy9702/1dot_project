@@ -13,7 +13,7 @@ type ChartViewProps = {
   row?: Row | null;
 };
 
-export function ChartView({ data, row }: ChartViewProps) {
+export function ChartView({ data }: ChartViewProps) {
   // 기본: 최근 30일
   const [days, setDays] = useState<number>(30);
   const [startDate, setStartDate] = useState<Date>(
@@ -35,11 +35,11 @@ export function ChartView({ data, row }: ChartViewProps) {
     return points;
   }, [data, days, startDate]);
 
-  const total = useMemo(() => series.reduce((a, b) => a + b.rank, 0), [series]);
-  const avg = useMemo(
-    () => (series.length > 0 ? Math.round(total / series.length) : 0),
-    [series, total]
-  );
+  // const total = useMemo(() => series.reduce((a, b) => a + b.rank, 0), [series]);
+  // const avg = useMemo(
+  //   () => (series.length > 0 ? Math.round(total / series.length) : 0),
+  //   [series, total]
+  // );
 
   return (
     <div>
