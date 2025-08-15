@@ -1,15 +1,15 @@
 "use client";
 
-import styles from "./page.module.css";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { type Row, generateDummyRows } from "./data/data";
-import { ViewDetails } from "./components/ViewDetails";
-import { EditForm } from "./components/EditForm";
-import { ChartView } from "./components/ChartView";
-import { Pagination } from "./components/Pagination";
-import { useAuth } from "./context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChartView } from "./components/ChartView";
+import { EditForm } from "./components/EditForm";
 import Header from "./components/header";
+import { Pagination } from "./components/Pagination";
+import { ViewDetails } from "./components/ViewDetails";
+import { useAuth } from "./context/AuthContext";
+import { type Row, generateDummyRows } from "./data/data";
+import styles from "./page.module.css";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -37,6 +37,34 @@ export default function Home() {
   const [pageSize, setPageSize] = useState<number | "all">("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // animejs 테스트
+  // useEffect(() => {
+  //   const el = document.querySelector<HTMLElement>("#animatedText");
+  //   if (!el) return;
+
+  //   // 텍스트를 문자 단위로 분리
+  //   const { chars } = text.split(el, {
+  //     chars: {
+  //       wrap: "clip",
+  //       clone: "bottom",
+  //     },
+  //   });
+
+  //   // 타임라인 실행
+  //   createTimeline().add(
+  //     chars,
+  //     {
+  //       y: "-100%",
+  //       loop: true,
+  //       loopDelay: 350,
+  //       duration: 750,
+  //       ease: "inOut(2)",
+  //       delay: 5000,
+  //     },
+  //     stagger(150, { from: "center" })
+  //   );
+  // }, []);
 
   useEffect(() => {
     const handleDocumentMouseDown = (e: MouseEvent) => {
@@ -144,7 +172,9 @@ export default function Home() {
       <Header />
       <div className={styles.center}>
         <div className={styles.centerBox}>
-          <h1 className={styles.hTextCenter}>1DOT PLACE RANK CHECK</h1>
+          <div className={styles.hTextCenter} id="animatedText">
+            1DOT PLACE RANK CHECK
+          </div>
         </div>
         <div className="app-container-1440">
           <div className="mt-4 p-3 bg-light border rounded">

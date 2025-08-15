@@ -8,7 +8,7 @@ import Image from "next/image";
 import { createDraggable } from "animejs";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -35,7 +35,7 @@ const LoginPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement actual API call for authentication
-    if (email && password) {
+    if (userId && password) {
       login();
     }
   };
@@ -54,11 +54,11 @@ const LoginPage = () => {
         <h1 className={styles.title}>로그인</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.label}>
-            <span className={styles.labelText}>이메일</span>
+            <span className={styles.labelText}>아이디</span>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
               className={styles.input}
               required
             />

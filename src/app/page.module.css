@@ -262,3 +262,8 @@ a.secondary {
 .pgEllipsis {
   cursor: default;
 }
+
+.hTextCenter span {
+  display: inline-block;
+  overflow: hidden;
+}
