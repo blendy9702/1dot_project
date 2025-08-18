@@ -10,6 +10,7 @@ import { ViewDetails } from "./components/ViewDetails";
 import { useAuth } from "./context/AuthContext";
 import { type Row, generateDummyRows } from "./data/data";
 import styles from "./page.module.css";
+import TextAnimation from "./test/page";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -138,8 +139,8 @@ export default function Home() {
       <Header />
       <div className={styles.center}>
         <div className={styles.centerBox}>
-          <div className={styles.hTextCenter} id="animatedText">
-            1DOT PLACE RANK CHECK
+          <div className={styles.hTextCenter}>
+            <TextAnimation />
           </div>
         </div>
         <div className="app-container-1440">

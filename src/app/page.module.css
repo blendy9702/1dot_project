@@ -118,7 +118,7 @@ a.secondary {
 
 .hTextCenter {
   padding-top: 40px;
-  padding-bottom: 40px;
+  /* padding-bottom: 40px; */
 }
 
 .centerBox {
@@ -126,16 +126,10 @@ a.secondary {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #bfcaeb;
-  gap: 16px;
+  background-color: #061e39;
   width: 100%;
   padding-top: 40px;
-  padding-bottom: 40px;
-}
-
-.centerBox > div {
-  display: flex;
-  gap: 16px;
+  padding-bottom: 20px;
 }
 
 @media (hover: hover) and (pointer: fine) {
