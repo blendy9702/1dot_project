@@ -1,3 +1,5 @@
+import { addMinutes, subMinutes } from "date-fns";
+
 export type Row = {
   section: string; // 구분
   keyword: string; // 키워드
@@ -92,3 +94,42 @@ export const generateDummyRows = (): Row[] =>
       });
     })(),
   ].flat();
+
+// 대시보드: PC/계정 더미 데이터 및 타입
+export type PcStatus = "정상" | "오류" | "오프라인";
+
+export type PcInfo = {
+  name: string;
+  lastCheckedAt: Date;
+  status: PcStatus;
+  jobCount: number;
+};
+
+export type AccountInfo = {
+  accountId: string;
+  jobCount: number;
+};
+
+const pcStatuses: PcStatus[] = ["정상", "오류", "오프라인"];
+
+export const generatePcData = (count: number): PcInfo[] => {
+  const base = new Date();
+  return Array.from({ length: count }, (_, idx) => {
+    const name = `PC-${String(idx + 1).padStart(3, "0")}`;
+    const offsetMin = (idx * 13) % 720; // 최대 12시간 ± 분 산포
+    const lastCheckedAt =
+      idx % 2 === 0
+        ? subMinutes(base, offsetMin)
+        : addMinutes(base, offsetMin % 120);
+    const status = pcStatuses[(idx * 7) % pcStatuses.length];
+    const jobCount = ((idx * 17) % 200) + (status === "오프라인" ? 0 : 5);
+    return { name, lastCheckedAt, status, jobCount } as PcInfo;
+  });
+};
+
+export const generateAccountData = (count: number): AccountInfo[] =>
+  Array.from({ length: count }, (_, idx) => {
+    const accountId = `user${String(idx + 1).padStart(3, "0")}`;
+    const jobCount = ((idx * 23) % 300) + 3;
+    return { accountId, jobCount } as AccountInfo;
+  });

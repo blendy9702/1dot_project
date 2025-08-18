@@ -38,34 +38,6 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // animejs 테스트
-  // useEffect(() => {
-  //   const el = document.querySelector<HTMLElement>("#animatedText");
-  //   if (!el) return;
-
-  //   // 텍스트를 문자 단위로 분리
-  //   const { chars } = text.split(el, {
-  //     chars: {
-  //       wrap: "clip",
-  //       clone: "bottom",
-  //     },
-  //   });
-
-  //   // 타임라인 실행
-  //   createTimeline().add(
-  //     chars,
-  //     {
-  //       y: "-100%",
-  //       loop: true,
-  //       loopDelay: 350,
-  //       duration: 750,
-  //       ease: "inOut(2)",
-  //       delay: 5000,
-  //     },
-  //     stagger(150, { from: "center" })
-  //   );
-  // }, []);
-
   useEffect(() => {
     const handleDocumentMouseDown = (e: MouseEvent) => {
       if (!openMenuPid) return;
@@ -103,11 +75,6 @@ export default function Home() {
       })
       .sort((a, b) => (a.pid < b.pid ? -1 : 1));
   }, [rows, sectionFilter, keywordFilter, placeFilter, pidFilter]);
-
-  // const openView = (row: Row) => {
-  //   setActiveRow(row);
-  //   setModalType("view");
-  // };
 
   const openEdit = (row: Row) => {
     setEditRow({ ...row });
@@ -162,9 +129,8 @@ export default function Home() {
   }, [filtered, pageSize, currentPage]);
 
   // 페이지 버튼 렌더링은 `Pagination` 컴포넌트에서 처리
-
   if (!isAuthenticated) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (
@@ -354,10 +320,6 @@ export default function Home() {
                                 </button>
                                 <button
                                   className={`dropdown-item w-100 p-2 ${styles.menuItem}`}
-                                  // onClick={() => {
-                                  //   openView(row);
-                                  //   setOpenMenuPid(null);
-                                  // }}
                                 >
                                   조회
                                 </button>

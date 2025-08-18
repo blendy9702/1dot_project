@@ -34,7 +34,6 @@ const LoginPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual API call for authentication
     if (userId && password) {
       login();
     }
