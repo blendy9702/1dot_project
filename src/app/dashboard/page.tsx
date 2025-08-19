@@ -1,27 +1,168 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, memo, useDeferredValue } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { BlogWorkList } from "../components/ds_components/BlogWorkList";
+import { PcWorkload } from "../components/ds_components/PcWorkload";
 import Header from "../components/header";
 import { Pagination } from "../components/Pagination";
 import { useAuth } from "../context/AuthContext";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { format } from "date-fns";
-import { ko } from "date-fns/locale";
-import {
-  type PcInfo,
   type AccountInfo,
-  generatePcData,
   generateAccountData,
+  generateKeywordData,
+  generatePcData,
+  generatePlaceData,
+  type KeywordInfo,
+  type PcInfo,
+  type PlaceInfo,
 } from "../data/data";
+
+// 메모이즈, 검색 입력 시 부모 리렌더에도 불필요한 차트 리렌더 방지
+const PcBarChart = memo(function PcBarChart({ data }: { data: PcInfo[] }) {
+  return (
+    <div style={{ width: "100%", height: 340 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-30}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip formatter={(v: number) => [v, "작업 수"]} />
+          <Bar
+            dataKey="jobCount"
+            name="작업 수"
+            fill="#2563eb"
+            isAnimationActive={false}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+});
+
+const AccountBarChart = memo(function AccountBarChart({
+  data,
+}: {
+  data: AccountInfo[];
+}) {
+  return (
+    <div style={{ width: "100%", height: 340 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="accountId"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-30}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip formatter={(v: number) => [v, "작업 수"]} />
+          <Bar
+            dataKey="jobCount"
+            name="작업 수"
+            fill="#16a34a"
+            isAnimationActive={false}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+});
+
+const PlaceBarChart = memo(function PlaceBarChart({
+  data,
+}: {
+  data: PlaceInfo[];
+}) {
+  return (
+    <div style={{ width: "100%", height: 340 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="placeName"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-30}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip formatter={(v: number) => [v, "작업 수"]} />
+          <Bar
+            dataKey="jobCount"
+            name="작업 수"
+            fill="#7c3aed"
+            isAnimationActive={false}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+});
+
+const KeywordBarChart = memo(function KeywordBarChart({
+  data,
+}: {
+  data: KeywordInfo[];
+}) {
+  return (
+    <div style={{ width: "100%", height: 340 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="keyword"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-30}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip formatter={(v: number) => [v, "작업 수"]} />
+          <Bar
+            dataKey="jobCount"
+            name="작업 수"
+            fill="#ef4444"
+            isAnimationActive={false}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+});
 
 export default function DashboardPage() {
   const { isAuthenticated } = useAuth();
@@ -33,68 +174,27 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, router]);
 
-  // PC 현황 데이터 및 페이지네이션(10개 고정)
   const [pcList] = useState<PcInfo[]>(() => generatePcData(37));
-  const [pcPage, setPcPage] = useState<number>(1);
-  const PC_PAGE_SIZE = 10;
-
-  // PC 현황 검색/조회 상태
-  const [pcNameFilter, setPcNameFilter] = useState<string>("");
-  const [pcQueryMode, setPcQueryMode] = useState<"daily" | "range">("daily");
-  const [pcDate, setPcDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
-  const [pcDateStart, setPcDateStart] = useState<string>("");
-  const [pcDateEnd, setPcDateEnd] = useState<string>("");
-
-  const pcFiltered = useMemo(() => {
-    return pcList
-      .filter((pc) =>
-        pc.name.toLowerCase().includes(pcNameFilter.toLowerCase())
-      )
-      .filter((pc) => {
-        const lastDate = format(pc.lastCheckedAt, "yyyy-MM-dd");
-        if (pcQueryMode === "daily") {
-          if (!pcDate) return true;
-          return lastDate === pcDate;
-        }
-        // range
-        if (pcDateStart && pcDateEnd)
-          return lastDate >= pcDateStart && lastDate <= pcDateEnd;
-        if (pcDateStart && !pcDateEnd) return lastDate >= pcDateStart;
-        if (!pcDateStart && pcDateEnd) return lastDate <= pcDateEnd;
-        return true;
-      });
-  }, [pcList, pcNameFilter, pcQueryMode, pcDate, pcDateStart, pcDateEnd]);
-
-  useEffect(() => {
-    setPcPage(1);
-  }, [pcNameFilter, pcQueryMode, pcDate, pcDateStart, pcDateEnd]);
-
-  const pcTotalPages = useMemo(
-    () => Math.max(1, Math.ceil(pcFiltered.length / PC_PAGE_SIZE)),
-    [pcFiltered.length]
-  );
-
-  const pcVisible = useMemo(() => {
-    const start = (pcPage - 1) * PC_PAGE_SIZE;
-    return pcFiltered.slice(start, start + PC_PAGE_SIZE);
-  }, [pcFiltered, pcPage]);
 
   // PC별 작업량 - 검색 필터
   const [pcNameQuery, setPcNameQuery] = useState<string>("");
   const [pcMinCount, setPcMinCount] = useState<string>("");
   const [pcMaxCount, setPcMaxCount] = useState<string>("");
+  const deferredPcNameQuery = useDeferredValue(pcNameQuery);
+  const deferredPcMin = useDeferredValue(pcMinCount);
+  const deferredPcMax = useDeferredValue(pcMaxCount);
 
   const filteredPcForChart = useMemo(() => {
     const min =
-      pcMinCount === "" ? Number.NEGATIVE_INFINITY : Number(pcMinCount);
+      deferredPcMin === "" ? Number.NEGATIVE_INFINITY : Number(deferredPcMin);
     const max =
-      pcMaxCount === "" ? Number.POSITIVE_INFINITY : Number(pcMaxCount);
+      deferredPcMax === "" ? Number.POSITIVE_INFINITY : Number(deferredPcMax);
     return pcList
-      .filter((pc) => pc.name.toLowerCase().includes(pcNameQuery.toLowerCase()))
+      .filter((pc) =>
+        pc.name.toLowerCase().includes(deferredPcNameQuery.toLowerCase())
+      )
       .filter((pc) => pc.jobCount >= min && pc.jobCount <= max);
-  }, [pcList, pcNameQuery, pcMinCount, pcMaxCount]);
+  }, [pcList, deferredPcNameQuery, deferredPcMin, deferredPcMax]);
   // PC별 작업량 리스트 페이지네이션
   const [pcChartPage, setPcChartPage] = useState<number>(1);
   const PC_CHART_PAGE_SIZE = 10;
@@ -116,22 +216,30 @@ export default function DashboardPage() {
   const [accountQuery, setAccountQuery] = useState<string>("");
   const [accountMinCount, setAccountMinCount] = useState<string>("");
   const [accountMaxCount, setAccountMaxCount] = useState<string>("");
+  const deferredAccountQuery = useDeferredValue(accountQuery);
+  const deferredAccountMin = useDeferredValue(accountMinCount);
+  const deferredAccountMax = useDeferredValue(accountMaxCount);
 
   const filteredAccountForChart = useMemo(() => {
     const min =
-      accountMinCount === ""
+      deferredAccountMin === ""
         ? Number.NEGATIVE_INFINITY
-        : Number(accountMinCount);
+        : Number(deferredAccountMin);
     const max =
-      accountMaxCount === ""
+      deferredAccountMax === ""
         ? Number.POSITIVE_INFINITY
-        : Number(accountMaxCount);
+        : Number(deferredAccountMax);
     return accountList
       .filter((a) =>
-        a.accountId.toLowerCase().includes(accountQuery.toLowerCase())
+        a.accountId.toLowerCase().includes(deferredAccountQuery.toLowerCase())
       )
       .filter((a) => a.jobCount >= min && a.jobCount <= max);
-  }, [accountList, accountQuery, accountMinCount, accountMaxCount]);
+  }, [
+    accountList,
+    deferredAccountQuery,
+    deferredAccountMin,
+    deferredAccountMax,
+  ]);
   // 계정 리스트 페이지네이션
   const [accountPage, setAccountPage] = useState<number>(1);
   const ACCOUNT_PAGE_SIZE = 10;
@@ -151,6 +259,57 @@ export default function DashboardPage() {
     return filteredAccountForChart.slice(start, start + ACCOUNT_PAGE_SIZE);
   }, [filteredAccountForChart, accountPage]);
 
+  // 플레이스별 작업량 (차트는 비필터 데이터 사용)
+  const [placeList] = useState<PlaceInfo[]>(() => generatePlaceData(36));
+  const [placeQuery, setPlaceQuery] = useState<string>("");
+  const [placeKeyQuery, setPlaceKeyQuery] = useState<string>("");
+  const deferredPlaceQuery = useDeferredValue(placeQuery);
+  const deferredPlaceKeyQuery = useDeferredValue(placeKeyQuery);
+  const filteredPlaceForList = useMemo(() => {
+    const nameQ = deferredPlaceQuery.toLowerCase();
+    const keyQ = deferredPlaceKeyQuery.toLowerCase();
+    return placeList
+      .filter((p) => p.placeName.toLowerCase().includes(nameQ))
+      .filter((p) => p.placeKey.toLowerCase().includes(keyQ));
+  }, [placeList, deferredPlaceQuery, deferredPlaceKeyQuery]);
+  const [placePage, setPlacePage] = useState<number>(1);
+  const PLACE_PAGE_SIZE = 10;
+  useEffect(() => {
+    setPlacePage(1);
+  }, [placeQuery, placeKeyQuery]);
+  const placeTotalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredPlaceForList.length / PLACE_PAGE_SIZE)),
+    [filteredPlaceForList.length]
+  );
+  const placeVisible = useMemo(() => {
+    const start = (placePage - 1) * PLACE_PAGE_SIZE;
+    return filteredPlaceForList.slice(start, start + PLACE_PAGE_SIZE);
+  }, [filteredPlaceForList, placePage]);
+
+  // 키워드별 작업량 (차트는 비필터 데이터 사용)
+  const [keywordList] = useState<KeywordInfo[]>(() => generateKeywordData(40));
+  const [keywordQuery, setKeywordQuery] = useState<string>("");
+  const deferredKeywordQuery = useDeferredValue(keywordQuery);
+  const filteredKeywordForList = useMemo(() => {
+    return keywordList.filter((k) =>
+      k.keyword.toLowerCase().includes(deferredKeywordQuery.toLowerCase())
+    );
+  }, [keywordList, deferredKeywordQuery]);
+  const [keywordPage, setKeywordPage] = useState<number>(1);
+  const KEYWORD_PAGE_SIZE = 10;
+  useEffect(() => {
+    setKeywordPage(1);
+  }, [keywordQuery]);
+  const keywordTotalPages = useMemo(
+    () =>
+      Math.max(1, Math.ceil(filteredKeywordForList.length / KEYWORD_PAGE_SIZE)),
+    [filteredKeywordForList.length]
+  );
+  const keywordVisible = useMemo(() => {
+    const start = (keywordPage - 1) * KEYWORD_PAGE_SIZE;
+    return filteredKeywordForList.slice(start, start + KEYWORD_PAGE_SIZE);
+  }, [filteredKeywordForList, keywordPage]);
+
   if (!isAuthenticated) return null;
 
   return (
@@ -158,121 +317,12 @@ export default function DashboardPage() {
       <Header />
       <div className="app-container-1440 py-4">
         {/* PC 현황 */}
-        <div className="mb-4 p-3 bg-light border rounded">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h5 className="m-2">PC 현황</h5>
-            <div className="d-flex align-items-end gap-2">
-              <div className="d-none d-md-block text-muted small">
-                총 {pcFiltered.length}대
-              </div>
-              <div className="d-flex gap-2">
-                <div>
-                  <label className="form-label mb-1 small">PC 이름</label>
-                  <input
-                    className="form-control form-control-sm"
-                    placeholder="PC 이름 검색"
-                    value={pcNameFilter}
-                    onChange={(e) => setPcNameFilter(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="form-label mb-1 small">조회 방식</label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={pcQueryMode}
-                    onChange={(e) =>
-                      setPcQueryMode(e.target.value as "daily" | "range")
-                    }
-                  >
-                    <option value="daily">일일조회</option>
-                    <option value="range">범위조회</option>
-                  </select>
-                </div>
-                {pcQueryMode === "daily" ? (
-                  <div>
-                    <label className="form-label mb-1 small">날짜</label>
-                    <input
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={pcDate}
-                      onChange={(e) => setPcDate(e.target.value)}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <label className="form-label mb-1 small">시작일</label>
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        value={pcDateStart}
-                        onChange={(e) => setPcDateStart(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label mb-1 small">종료일</label>
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        value={pcDateEnd}
-                        onChange={(e) => setPcDateEnd(e.target.value)}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+        <div className="d-flex gap-4">
+          <div className="col-md-6">
+            <PcWorkload />
           </div>
-          <div className="table-responsive">
-            <table className="table table-sm align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: 200 }}>PC 이름</th>
-                  <th style={{ width: 220 }}>마지막 체크 시간</th>
-                  <th style={{ width: 120 }}>상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pcVisible.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="text-center text-muted py-4">
-                      조건에 맞는 데이터가 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  pcVisible.map((pc) => (
-                    <tr key={pc.name}>
-                      <td>{pc.name}</td>
-                      <td>
-                        {format(pc.lastCheckedAt, "yyyy-MM-dd a hh:mm", {
-                          locale: ko,
-                        })}
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            pc.status === "정상"
-                              ? "text-bg-success"
-                              : pc.status === "오류"
-                              ? "text-bg-warning"
-                              : "text-bg-secondary"
-                          }`}
-                        >
-                          {pc.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-2">
-            <Pagination
-              currentPage={pcPage}
-              totalPages={pcTotalPages}
-              onPageChange={setPcPage}
-            />
+          <div className="col-md-6">
+            <BlogWorkList />
           </div>
         </div>
 
@@ -281,27 +331,7 @@ export default function DashboardPage() {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="m-2">PC별 작업량</h5>
           </div>
-          <div style={{ width: "100%", height: 340 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={pcList}
-                margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 12 }}
-                  interval={0}
-                  angle={-30}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v: number) => [v, "작업 수"]} />
-                <Bar dataKey="jobCount" name="작업 수" fill="#2563eb" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <PcBarChart data={pcList} />
           {/* PC별 작업량 리스트 */}
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="m-2">PC별 작업량 리스트</h5>
@@ -342,7 +372,7 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
-            <div className="table-responsive">
+            <div className="table-responsive" style={{ minHeight: 400 }}>
               <table className="table table-sm table-hover align-middle">
                 <thead className="table-light">
                   <tr>
@@ -382,27 +412,7 @@ export default function DashboardPage() {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="m-2">계정별 작업량</h5>
           </div>
-          <div style={{ width: "100%", height: 340 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={accountList}
-                margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="accountId"
-                  tick={{ fontSize: 12 }}
-                  interval={0}
-                  angle={-30}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v: number) => [v, "작업 수"]} />
-                <Bar dataKey="jobCount" name="작업 수" fill="#16a34a" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <AccountBarChart data={accountList} />
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="m-2">계정별 작업량 리스트</h5>
             <div className="text-muted small">
@@ -442,7 +452,7 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
-            <div className="table-responsive">
+            <div className="table-responsive" style={{ minHeight: 400 }}>
               <table className="table table-sm table-hover align-middle">
                 <thead className="table-light">
                   <tr>
@@ -473,6 +483,136 @@ export default function DashboardPage() {
                 currentPage={accountPage}
                 totalPages={accountTotalPages}
                 onPageChange={setAccountPage}
+              />
+            </div>
+          </div>
+        </div>
+        {/* 플레이스별 작업량 */}
+        <div className="mb-4 p-3 bg-light border rounded">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="m-2">플레이스별 작업량</h5>
+          </div>
+          <PlaceBarChart data={placeList} />
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="m-2">플레이스별 작업량 리스트</h5>
+            <div className="text-muted small">
+              총 {filteredPlaceForList.length}건
+            </div>
+          </div>
+          <div className="mb-4 p-3 bg-light border rounded">
+            <div className="d-flex gap-2 align-items-end mb-3">
+              <div>
+                <label className="form-label mb-1 small">플레이스명</label>
+                <input
+                  className="form-control form-control-sm"
+                  placeholder="플레이스명 검색"
+                  value={placeQuery}
+                  onChange={(e) => setPlaceQuery(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="form-label mb-1 small">플레이스키</label>
+                <input
+                  className="form-control form-control-sm"
+                  placeholder="플레이스키 검색"
+                  value={placeKeyQuery}
+                  onChange={(e) => setPlaceKeyQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="table-responsive" style={{ minHeight: 400 }}>
+              <table className="table table-sm table-hover align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>플레이스명</th>
+                    <th>플레이스키</th>
+                    <th>작업 수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {placeVisible.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="text-center text-muted py-4">
+                        조건에 맞는 데이터가 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    placeVisible.map((p) => (
+                      <tr key={p.placeKey}>
+                        <td>{p.placeName}</td>
+                        <td>{p.placeKey}</td>
+                        <td>{p.jobCount}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-2">
+              <Pagination
+                currentPage={placePage}
+                totalPages={placeTotalPages}
+                onPageChange={setPlacePage}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 키워드별 작업량 */}
+        <div className="mb-4 p-3 bg-light border rounded">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="m-2">키워드별 작업량</h5>
+          </div>
+          <KeywordBarChart data={keywordList} />
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="m-2">키워드별 작업량 리스트</h5>
+            <div className="text-muted small">
+              총 {filteredKeywordForList.length}건
+            </div>
+          </div>
+          <div className="mb-4 p-3 bg-light border rounded">
+            <div className="d-flex gap-2 align-items-end mb-3">
+              <div>
+                <label className="form-label mb-1 small">키워드</label>
+                <input
+                  className="form-control form-control-sm"
+                  placeholder="키워드 검색"
+                  value={keywordQuery}
+                  onChange={(e) => setKeywordQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="table-responsive" style={{ minHeight: 400 }}>
+              <table className="table table-sm table-hover align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>키워드</th>
+                    <th>작업 수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {keywordVisible.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} className="text-center text-muted py-4">
+                        조건에 맞는 데이터가 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    keywordVisible.map((k) => (
+                      <tr key={k.keyword}>
+                        <td>{k.keyword}</td>
+                        <td>{k.jobCount}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-2">
+              <Pagination
+                currentPage={keywordPage}
+                totalPages={keywordTotalPages}
+                onPageChange={setKeywordPage}
               />
             </div>
           </div>

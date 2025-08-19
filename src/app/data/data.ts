@@ -133,3 +133,108 @@ export const generateAccountData = (count: number): AccountInfo[] =>
     const jobCount = ((idx * 23) % 300) + 3;
     return { accountId, jobCount } as AccountInfo;
   });
+
+// 플레이스/키워드/블로그 더미 데이터 및 타입
+export type PlaceInfo = {
+  placeName: string;
+  placeKey: string;
+  jobCount: number;
+};
+
+export const generatePlaceData = (count: number): PlaceInfo[] => {
+  const places = [
+    "서울",
+    "부산",
+    "인천",
+    "대구",
+    "대전",
+    "광주",
+    "울산",
+    "수원",
+    "창원",
+    "용인",
+    "고양",
+    "성남",
+  ];
+  return Array.from({ length: count }, (_, idx) => {
+    const placeName = places[idx % places.length];
+    const placeKey = `PL-${String(idx + 1).padStart(3, "0")}`;
+    const jobCount = ((idx * 19) % 400) + 5;
+    return { placeName, placeKey, jobCount } as PlaceInfo;
+  });
+};
+
+export type KeywordInfo = {
+  keyword: string;
+  jobCount: number;
+};
+
+export const generateKeywordData = (count: number): KeywordInfo[] => {
+  const candidates = [
+    "커피",
+    "피자",
+    "스시",
+    "파스타",
+    "라멘",
+    "버거",
+    "샐러드",
+    "디저트",
+    "파니니",
+    "스테이크",
+    "쌀국수",
+  ];
+  return Array.from({ length: count }, (_, idx) => {
+    const base = candidates[idx % candidates.length];
+    const keyword = `${base}${idx + 1}`;
+    const jobCount = ((idx * 29) % 350) + 4;
+    return { keyword, jobCount } as KeywordInfo;
+  });
+};
+
+export type BlogUsage = {
+  url: string;
+  accessCount: number;
+};
+
+export const generateBlogUsageData = (count: number): BlogUsage[] => {
+  return Array.from({ length: count }, (_, idx) => {
+    const n = idx + 1;
+    const url = `https://blog.example.com/post-${String(n).padStart(3, "0")}`;
+    const accessCount = ((idx * 37) % 500) + 10;
+    return { url, accessCount } as BlogUsage;
+  });
+};
+
+// Fail Account 삭제 페이지 데이터
+export type FailAccountItem = {
+  id: string; // unique id (row key)
+  pcName: string;
+  accountId: string;
+  type: "자동" | "수동" | "시스템";
+  date: Date;
+};
+
+export const generateFailAccountData = (count: number): FailAccountItem[] => {
+  const types: Array<FailAccountItem["type"]> = ["자동", "수동", "시스템"];
+  const pcPool = [
+    "PC-001",
+    "PC-002",
+    "PC-003",
+    "PC-004",
+    "PC-005",
+    "PC-006",
+    "PC-007",
+    "PC-008",
+  ];
+  const now = new Date();
+  return Array.from({ length: count }, (_, idx) => {
+    const id = `F-${String(idx + 1).padStart(4, "0")}`;
+    const pcName = pcPool[idx % pcPool.length];
+    const accountId = `user${String((idx % 120) + 1).padStart(3, "0")}`;
+    const type = types[idx % types.length];
+    // 최근 60일 내 랜덤 분포
+    const daysBack = (idx * 7) % 60;
+    const date = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+    return { id, pcName, accountId, type, date } as FailAccountItem;
+  });
+};
