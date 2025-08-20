@@ -40,18 +40,25 @@ export default function FailAccountPage() {
 
   // 페이지네이션
   const [page, setPage] = useState<number>(1);
-  const PAGE_SIZE = 10;
+  const [pageSizeOption, setPageSizeOption] = useState<string>("all");
+  const pageSize = useMemo(() => {
+    if (pageSizeOption === "all") {
+      return Math.max(1, filtered.length);
+    }
+    return parseInt(pageSizeOption, 10);
+  }, [pageSizeOption, filtered.length]);
+
   useEffect(() => {
     setPage(1);
-  }, [pcQuery, idQuery, dateFrom, dateTo]);
+  }, [pcQuery, idQuery, dateFrom, dateTo, pageSizeOption]);
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
-    [filtered.length]
+    () => Math.max(1, Math.ceil(filtered.length / pageSize)),
+    [filtered.length, pageSize]
   );
   const visible = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, page]);
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
   // 선택 토글
   const toggleOne = (id: string) => {
@@ -114,6 +121,7 @@ export default function FailAccountPage() {
               </button>
             </div>
           </div>
+
           <div className="mt-2 d-flex gap-2 align-items-end flex-wrap">
             <div>
               <label className="form-label mb-1 small">PC</label>
@@ -155,6 +163,39 @@ export default function FailAccountPage() {
         </div>
 
         <div className="p-3 bg-light border rounded">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="m-0">데이터 리스트</h5>
+            <div className="d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <label className="form-label small text-nowrap m-0">
+                  페이지 수
+                </label>
+                <select
+                  className="form-select form-select-sm"
+                  value={pageSizeOption}
+                  onChange={(e) => {
+                    setPageSizeOption(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="all">전체</option>
+                  <option value="5">5개</option>
+                  <option value="10">10개</option>
+                  <option value="15">15개</option>
+                </select>
+              </div>
+            </div>
+            <div className="text-muted">총 {filtered.length}건</div>
+          </div>
+          {pageSizeOption !== "all" && totalPages > 1 && (
+            <div className="my-2">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
           <div className="table-responsive" style={{ minHeight: 400 }}>
             <table className="table table-sm table-hover align-middle">
               <thead className="table-light">
@@ -188,8 +229,12 @@ export default function FailAccountPage() {
                   </tr>
                 ) : (
                   visible.map((r, idx) => (
-                    <tr key={r.id}>
-                      <td>
+                    <tr
+                      key={r.id}
+                      onClick={() => toggleOne(r.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           className="form-check-input"
@@ -198,14 +243,14 @@ export default function FailAccountPage() {
                           aria-label={`Select ${r.id}`}
                         />
                       </td>
-                      <td>{(page - 1) * PAGE_SIZE + (idx + 1)}</td>
+                      <td>{(page - 1) * pageSize + (idx + 1)}</td>
                       <td>{r.pcName}</td>
                       <td>{r.accountId}</td>
                       <td>{r.type}</td>
                       <td>
                         {format(r.date, "yyyy-MM-dd a hh:mm", { locale: ko })}
                       </td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <button
                           className="btn btn-outline-danger btn-sm"
                           onClick={() => removeOne(r.id)}
@@ -218,13 +263,6 @@ export default function FailAccountPage() {
                 )}
               </tbody>
             </table>
-          </div>
-          <div className="mt-2">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
           </div>
         </div>
       </div>
