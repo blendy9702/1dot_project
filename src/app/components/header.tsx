@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FaFileWord } from "react-icons/fa";
 import {
@@ -7,19 +8,21 @@ import {
   MdChecklist,
   MdDashboard,
   MdDelete,
-  MdPlace,
   MdLogout,
   MdManageAccounts,
   MdOutlineSettings,
+  MdPlace,
   MdRateReview,
 } from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
 import styles from "./header.module.css";
+import Add from "./Add";
 
 export default function Header() {
   const { isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   if (pathname === "/login") {
     return null;
@@ -107,7 +110,10 @@ export default function Header() {
                       <MdDashboard size={20} />
                       <span>Dashboard</span>
                     </button>
-                    <button className="btn btn-primary d-flex align-items-center gap-1">
+                    <button
+                      className="btn btn-primary d-flex align-items-center gap-1"
+                      onClick={() => setIsAddOpen(true)}
+                    >
                       <MdAdd size={20} />
                       <span>Add</span>
                     </button>
@@ -140,6 +146,13 @@ export default function Header() {
           </nav>
         </div>
       </div>
+      {isAuthenticated && (
+        <Add
+          isOpen={isAddOpen}
+          onClose={() => setIsAddOpen(false)}
+          onSubmit={() => setIsAddOpen(false)}
+        />
+      )}
     </header>
   );
 }
