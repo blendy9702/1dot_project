@@ -17,12 +17,18 @@ import {
 import { useAuth } from "../context/AuthContext";
 import styles from "./header.module.css";
 import Add from "./Add";
+import KeywordEdit from "./KeywordEdit";
+import AccountEdit from "./AccountEdit";
+import RemoveModal from "./RemoveModal";
 
 export default function Header() {
   const { isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isKeywordOpen, setIsKeywordOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isRemoveOpen, setIsRemoveOpen] = useState(false);
 
   if (pathname === "/login") {
     return null;
@@ -95,11 +101,17 @@ export default function Header() {
                       <MdRateReview size={20} />
                       <span>Review</span>
                     </button>
-                    <button className="btn btn-primary d-flex align-items-center gap-1">
+                    <button
+                      className="btn btn-primary d-flex align-items-center gap-1"
+                      onClick={() => setIsKeywordOpen(true)}
+                    >
                       <FaFileWord size={16} />
                       <span>Keyword Edit</span>
                     </button>
-                    <button className="btn btn-primary d-flex align-items-center gap-1">
+                    <button
+                      className="btn btn-primary d-flex align-items-center gap-1"
+                      onClick={() => setIsAccountOpen(true)}
+                    >
                       <MdManageAccounts size={20} />
                       <span>Account Edit</span>
                     </button>
@@ -117,7 +129,10 @@ export default function Header() {
                       <MdAdd size={20} />
                       <span>Add</span>
                     </button>
-                    <button className="btn btn-primary d-flex align-items-center gap-1">
+                    <button
+                      className="btn btn-primary d-flex align-items-center gap-1"
+                      onClick={() => setIsRemoveOpen(true)}
+                    >
                       <MdDelete size={20} />
                       <span>Remove</span>
                     </button>
@@ -151,6 +166,27 @@ export default function Header() {
           isOpen={isAddOpen}
           onClose={() => setIsAddOpen(false)}
           onSubmit={() => setIsAddOpen(false)}
+        />
+      )}
+      {isAuthenticated && (
+        <KeywordEdit
+          isOpen={isKeywordOpen}
+          onClose={() => setIsKeywordOpen(false)}
+          onApply={() => setIsKeywordOpen(false)}
+        />
+      )}
+      {isAuthenticated && (
+        <AccountEdit
+          isOpen={isAccountOpen}
+          onClose={() => setIsAccountOpen(false)}
+          onApply={() => setIsAccountOpen(false)}
+        />
+      )}
+      {isAuthenticated && (
+        <RemoveModal
+          isOpen={isRemoveOpen}
+          onClose={() => setIsRemoveOpen(false)}
+          onRemove={() => setIsRemoveOpen(false)}
         />
       )}
     </header>
