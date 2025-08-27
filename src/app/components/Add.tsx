@@ -88,8 +88,8 @@ export default function Add({ isOpen, onClose, onSubmit }: AddModalProps) {
   };
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div style={overlayStyle} role="dialog" aria-modal="true">
+      <div style={modalStyle}>
         <div
           style={{
             display: "flex",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type TextFileOption = {
   id: string;
@@ -84,6 +84,22 @@ export default function AccountEdit({
     return options.filter((opt) => opt.name.toLowerCase().includes(q));
   }, [options, query]);
 
+  // 검색 결과와 선택 상태 동기화: 자동선택 없이, 선택 항목이 결과에 없으면 초기화만 수행
+  useEffect(() => {
+    if (!isOpen) return;
+    if (selected && !filtered.some((o) => o.id === selected)) {
+      setSelected("");
+      setContent("");
+    }
+  }, [filtered, isOpen, selected]);
+
+  // 검색 시 기본값(placeholder)로 리셋
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelected("");
+    setContent("");
+  }, [query, isOpen]);
+
   if (!isOpen) return null;
 
   const toggleSelect = (id: string) => {
@@ -98,8 +114,8 @@ export default function AccountEdit({
   };
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div style={overlayStyle} role="dialog" aria-modal="true">
+      <div style={modalStyle}>
         <div
           style={{
             display: "flex",
@@ -133,6 +149,7 @@ export default function AccountEdit({
               value={selected}
               onChange={(e) => toggleSelect(e.target.value)}
             >
+              <option value="">계정 파일을 선택하세요</option>
               {filtered.map((opt) => (
                 <option
                   key={opt.id}
