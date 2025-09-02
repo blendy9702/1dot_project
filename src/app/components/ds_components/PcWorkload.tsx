@@ -4,7 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import { generatePcData, PcInfo } from "@/app/data/data";
 import { Pagination } from "../Pagination";
 
-export function PcWorkload() {
+export function PcWorkload({
+  dailyDate,
+  rangeStart,
+  rangeEnd,
+  queryMode,
+}: {
+  dailyDate?: string;
+  rangeStart?: string;
+  rangeEnd?: string;
+  queryMode?: "daily" | "range";
+}) {
   // PC 현황 데이터 및 페이지네이션(10개 고정)
   const [pcList] = useState<PcInfo[]>(() => generatePcData(37));
   const [pcPage, setPcPage] = useState<number>(1);
@@ -38,6 +48,21 @@ export function PcWorkload() {
         return true;
       });
   }, [pcList, pcNameFilter, pcQueryMode, pcDate, pcDateStart, pcDateEnd]);
+
+  useEffect(() => {
+    if (queryMode === "daily") {
+      if (dailyDate) {
+        setPcQueryMode("daily");
+        setPcDate(dailyDate);
+      }
+      return;
+    }
+    if (queryMode === "range") {
+      setPcQueryMode("range");
+      if (typeof rangeStart === "string") setPcDateStart(rangeStart);
+      if (typeof rangeEnd === "string") setPcDateEnd(rangeEnd);
+    }
+  }, [queryMode, dailyDate, rangeStart, rangeEnd]);
 
   useEffect(() => {
     setPcPage(1);
@@ -75,7 +100,7 @@ export function PcWorkload() {
               onChange={(e) => setPcNameFilter(e.target.value)}
             />
           </div>
-          <div>
+          {/* <div>
             <label className="form-label mb-1 small">조회 방식</label>
             <select
               className="form-select form-select-sm"
@@ -87,8 +112,8 @@ export function PcWorkload() {
               <option value="daily">일일조회</option>
               <option value="range">범위조회</option>
             </select>
-          </div>
-          {pcQueryMode === "daily" ? (
+          </div> */}
+          {/* {pcQueryMode === "daily" ? (
             <div>
               <label className="form-label mb-1 small">날짜</label>
               <input
@@ -119,7 +144,7 @@ export function PcWorkload() {
                 />
               </div>
             </>
-          )}
+          )} */}
         </div>
         <div className="table-responsive" style={{ minHeight: 400 }}>
           <table className="table table-sm align-middle">

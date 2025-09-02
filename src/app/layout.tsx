@@ -1,6 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import type { Metadata } from "next";
 import { AuthProvider } from "./context/AuthContext";
+import { DateFilterProvider } from "./context/DateFilterContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <AuthProvider>
-        <body>{children}</body>
+        <DateFilterProvider>
+          <body>{children}</body>
+        </DateFilterProvider>
       </AuthProvider>
     </html>
   );

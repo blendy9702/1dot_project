@@ -16,6 +16,7 @@ import { PcWorkload } from "../components/ds_components/PcWorkload";
 import Header from "../components/header";
 import { Pagination } from "../components/Pagination";
 import { useAuth } from "../context/AuthContext";
+import { format } from "date-fns";
 import {
   type AccountInfo,
   generateAccountData,
@@ -175,6 +176,22 @@ export default function DashboardPage() {
   }, [isAuthenticated, router]);
 
   const [pcList] = useState<PcInfo[]>(() => generatePcData(37));
+  // 대시보드 조회 모드: 일일/범위
+  const [queryMode, setQueryMode] = useState<"daily" | "range">("daily");
+  const [dailyDate, setDailyDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const [rangeStart, setRangeStart] = useState<string>("");
+  const [rangeEnd, setRangeEnd] = useState<string>("");
+
+  // 범위조회 선택 시 기본값을 오늘로 설정
+  useEffect(() => {
+    if (queryMode === "range") {
+      const today = format(new Date(), "yyyy-MM-dd");
+      setRangeStart(today);
+      setRangeEnd(today);
+    }
+  }, [queryMode]);
 
   // PC별 작업량 - 검색 필터
   const [pcNameQuery, setPcNameQuery] = useState<string>("");
@@ -193,8 +210,30 @@ export default function DashboardPage() {
       .filter((pc) =>
         pc.name.toLowerCase().includes(deferredPcNameQuery.toLowerCase())
       )
+      .filter((pc) => {
+        const d = format(pc.lastCheckedAt, "yyyy-MM-dd");
+        if (queryMode === "daily") {
+          return d === dailyDate;
+        }
+        if (queryMode === "range") {
+          if (rangeStart && rangeEnd) return d >= rangeStart && d <= rangeEnd;
+          if (rangeStart && !rangeEnd) return d >= rangeStart;
+          if (!rangeStart && rangeEnd) return d <= rangeEnd;
+          return true;
+        }
+        return true;
+      })
       .filter((pc) => pc.jobCount >= min && pc.jobCount <= max);
-  }, [pcList, deferredPcNameQuery, deferredPcMin, deferredPcMax]);
+  }, [
+    pcList,
+    deferredPcNameQuery,
+    deferredPcMin,
+    deferredPcMax,
+    dailyDate,
+    queryMode,
+    rangeStart,
+    rangeEnd,
+  ]);
   // PC별 작업량 리스트 페이지네이션
   const [pcChartPage, setPcChartPage] = useState<number>(1);
   const PC_CHART_PAGE_SIZE = 10;
@@ -229,6 +268,9 @@ export default function DashboardPage() {
       deferredAccountMax === ""
         ? Number.POSITIVE_INFINITY
         : Number(deferredAccountMax);
+    // NOTE: 더미 account 데이터에는 날짜가 없어, 일일조회 개념을 맞추기 위해
+    // 대시보드 전체 일일조회 시 차트/리스트는 동일하게 표시하되,
+    // 실제 날짜 필터는 PC 데이터에만 엄격히 적용됩니다.
     return accountList
       .filter((a) =>
         a.accountId.toLowerCase().includes(deferredAccountQuery.toLowerCase())
@@ -259,7 +301,7 @@ export default function DashboardPage() {
     return filteredAccountForChart.slice(start, start + ACCOUNT_PAGE_SIZE);
   }, [filteredAccountForChart, accountPage]);
 
-  // 플레이스별 작업량 (차트는 비필터 데이터 사용)
+  // 플레이스별 작업량 (차트/리스트)
   const [placeList] = useState<PlaceInfo[]>(() => generatePlaceData(36));
   const [placeQuery, setPlaceQuery] = useState<string>("");
   const [placeKeyQuery, setPlaceKeyQuery] = useState<string>("");
@@ -286,7 +328,7 @@ export default function DashboardPage() {
     return filteredPlaceForList.slice(start, start + PLACE_PAGE_SIZE);
   }, [filteredPlaceForList, placePage]);
 
-  // 키워드별 작업량 (차트는 비필터 데이터 사용)
+  // 키워드별 작업량 (차트/리스트)
   const [keywordList] = useState<KeywordInfo[]>(() => generateKeywordData(40));
   const [keywordQuery, setKeywordQuery] = useState<string>("");
   const deferredKeywordQuery = useDeferredValue(keywordQuery);
@@ -316,10 +358,78 @@ export default function DashboardPage() {
     <>
       <Header />
       <div className="app-container-1440 py-4">
+        {/* 대시보드 일일조회 바 */}
+        <div className="mb-3 p-3 bg-light border rounded">
+          <div className="d-flex align-items-end gap-2 flex-wrap">
+            <div>
+              <label className="form-label mb-1 small">조회 방식</label>
+              <select
+                className="form-select form-select-sm"
+                value={queryMode}
+                onChange={(e) =>
+                  setQueryMode(e.target.value as "daily" | "range")
+                }
+              >
+                <option value="daily">일일조회</option>
+                <option value="range">범위조회</option>
+              </select>
+            </div>
+            {queryMode === "daily" ? (
+              <>
+                <div>
+                  <label className="form-label mb-1 small">날짜</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={dailyDate}
+                    onChange={(e) => setDailyDate(e.target.value)}
+                  />
+                </div>
+                {/* <div className="mb-1">
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() =>
+                      setDailyDate(format(new Date(), "yyyy-MM-dd"))
+                    }
+                  >
+                    오늘
+                  </button>
+                </div> */}
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="form-label mb-1 small">시작일</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={rangeStart}
+                    onChange={(e) => setRangeStart(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="form-label mb-1 small">종료일</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={rangeEnd}
+                    onChange={(e) => setRangeEnd(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* PC 현황 */}
         <div className="d-flex gap-4">
           <div className="col-md-6">
-            <PcWorkload />
+            <PcWorkload
+              dailyDate={dailyDate}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              queryMode={queryMode}
+            />
           </div>
           <div className="col-md-6">
             <BlogWorkList />
@@ -331,7 +441,7 @@ export default function DashboardPage() {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="m-2">PC별 작업량</h5>
           </div>
-          <PcBarChart data={pcList} />
+          <PcBarChart data={filteredPcForChart} />
           {/* PC별 작업량 리스트 */}
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="m-2">PC별 작업량 리스트</h5>
